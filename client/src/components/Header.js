@@ -1,36 +1,41 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Consumer } from "../Context";
+import { NavLink, Link } from "react-router-dom";
+import React from "react";
 
-const Header = (props) => {
-  // context from props
-  const { context } = props;
-  // authenticated user from context
-  const authUser = context.authenticatedUser;
+const Header = () => {
+  return (
+    <Consumer>
+      {({ user, authenticated, signOut }) => (
+        <div className="header">
+          <div className="bounds">
+            <h1 className="header--logo">
+              <NavLink to="/courses">Courses</NavLink>
+            </h1>
 
-  return(
-    <div className="header">
-      <div className="bounds">
-        <h1 onClick={() => window.location.href = '/'} className="header--logo"> Computer Courses</h1>
-        {
-          authUser ?
-          <nav>
-            <span>Welcome, {authUser.firstName} {authUser.lastName}!</span>
-            <NavLink className="signout" to="/signout">Sign Out</NavLink>
-          </nav> :
-          <nav>
-            <NavLink className="signup"to={{pathname:'/signup',
-                state: { from: props.location },}}
-            >Sign Up</NavLink>
-
-            <NavLink
-              className="signin"
-              to={{pathname:'/signin',state: { from: props.location },}}
-            >Sign In</NavLink>
-          </nav>
-        }
-      </div>
-    </div>
+            {authenticated ? (
+              <nav>
+                <span>
+                  Welcome {user.firstName} {user.lastName} !
+                </span>
+                <Link className="signout" to="/signOut" onClick={signOut}>
+                  Sign Out
+                </Link>
+              </nav>
+            ) : (
+              <nav>
+                <NavLink className="signup" to="/signup">
+                  Sign Up
+                </NavLink>
+                <NavLink className="signin" to="/signin">
+                  Sign In
+                </NavLink>
+              </nav>
+            )}
+          </div>
+        </div>
+      )}
+    </Consumer>
   );
-}
+};
 
 export default Header;

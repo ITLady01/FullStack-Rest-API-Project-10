@@ -1,240 +1,188 @@
-var express = require('express');
-var router = express.Router();
-var Course = require("../models").Course;
-var User = require("../models").User;
-const Sequelize = require('sequelize');
-const authenticateUser = require('./authenticate');
-const { check, validationResult } = require('express-validator/check');
+const express = require("express");
+const authUser = require("../auth");
+const { User, Course, sequelize } = require("../models");
+const router = express.Router();
+const { check, validationResult } = require('express-validator');
 
-
-// Get all courses route
-router.get('/', (req, res, next) => {
-    // Query the db to get all courses, returning the specified attributes
-    Course.findAll({
-        attributes: [ 
-                      'id', 
-                      'title', 
-                      'description', 
-                      'estimatedTime', 
-                      'materialsNeeded', 
-                      'userId'
-                    ],
-        include: [{
-                model: User,
-                as: 'user',
-                attributes: ['id', 'firstName', 'lastName', 'emailAddress','password',]
-            }] 
-    })
-    .then((results) => {
-        if (!results) {
-            // Log error and set status code if there's a problem retrieving the courses
-            const error = new Error('There was an error retrieving the list of courses'); //throw custom error    
-            error.status = 400;
-            next(error); // pass error along to global error handler
-        } else {
-            // Set status code 200 and send resulting data
-            res.status(200).json(results).end();
-        }
-    }).catch((error) => {
-        // catch any other errors and pass errors to global error handler
-        next(error);  
-    });
-});
-
-// Get individual course route
-router.get('/:id', (req, res, next) => {
-    // Query the db to get individual course, returning the specified attributes
-    Course.findByPk(req.params.id, {
-        attributes: [
-            'id',
-            'title',
-            'description',
-            'estimatedTime',
-            'materialsNeeded',
-            'userId'
-        ],
-        include: [{
-                model: User,
-                as: 'user',
-                attributes: ['id', 'firstName', 'lastName', 'emailAddress', 'password',]
-            }]
-      })
-    .then((course) => {
-        if (!course) {
-            // Log error and set status code if there's a problem retrieving the courses
-            const error = new Error('No course attached to provided ID'); //throw custom error    
-            error.status = 409;
-            next(error) // pass error along to global error handler
-        } else {
-            // Set status code 200 and send resulting data
-            res.status(200).json(course).end();
-        }
-    }).catch((error)=>{
-        // catch any other errors and pass errors to global error handler
-        next(error);
-    });
-});
-
-// Post course route
-// Use express-validation middleware to check incoming data
-router.post('/', [
-    check('title')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please enter a class title'),
-      check('description')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please enter a class description')
-  ], authenticateUser, (req, res, next) => {
-      // Attempt to get the validation result from the Request object.
-    const errors = validationResult(req);
-    // If there are validation errors...
-    if (!errors.isEmpty()) {
-        // Use the Array `map()` method to get a list of error messages.
-        const errorMessages = errors.array().map(error => error.msg);
-        // Create custom error with 400 status code
-        const error = new Error(errorMessages);
-        error.status = 400;
-        next(error); // pass error along to global error handler
-    } else {
-        Course.findOne({ where: {title: req.body.title} })
-        .then((course) => {
-            if (course) {
-                const error = new Error('This course already exists'); //throw custom error    
-                error.status = 409;
-                next(error); // pass error along to global error handler
-            } else {
-                //req.body contains a json object with the values of the form which maps 1:1 to the Course model.
-                req.body.userId = req.currentUser.id;                
-                Course.create(req.body)
-                .then((course)=>{
-                    if(!course){
-                        const error = new Error('There was a problem posting the course'); //throw custom error
-                        error.status =400;
-                        next(error); // pass error along to global error handler
-                    } else {
-                        res.location(`/api/courses/${course.id}`);
-                        res.status(201).end();
-                    }
-                }).catch((error)=> {  // check for errors within body
-                    if (error.name === "SequelizeValidationError") {
-                        // Use Sequelize ORM to catch any validation errors
-                        // If errors exist, map over array of error objects and return array
-                        // with error messages
-                        const errorsArray = error.errors.map((error) => {
-                            return error.message;                
-                        })
-                        const err = new Error(errorsArray); //custom error message
-                        err.status = 400;
-                        next(err) // pass error along to global error handler
-                    } else {
-                        // catch any other errors and pass errors to global error handler
-                        next(error);
-                    }
-                });
-                return null;
-            };
-        }).catch((error) => {
-            // catch any other errors and pass errors to global error handler
-            next(error);
-        });
-    };      
-});
-
-// Update course route
-router.put('/:id', [
-    check('title')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please enter a class title'),
-      check('description')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please enter a class description')
-  ], authenticateUser, (req, res, next) => {
-    // Attempt to get the validation result from the Request object.
-    const errors = validationResult(req);
-    // If there are validation errors...
-    if (!errors.isEmpty()) {
-        // Use the Array `map()` method to get a list of error messages.
-        const errorMessages = errors.array().map(error => error.msg);
-        // Create custom error with 400 status code
-        const error = new Error(errorMessages);
-        error.status = 400;
-        next(error); // pass error along to global error handler
-    } else {
-        // Get course by id
-        Course.findByPk(req.params.id)
-        .then((course) => {
-            if(!(course.userId == req.currentUser.id)) {
-                res.status(403).json({ message: 'Users may only update courses they created themselves' });
-            } else {
-                if (!course) { 
-                    const error = new Error('Cannot find the requested resource to update'); // custom error message
-                    error.status = 400;
-                    next(error) // pass error along to global error handler
-                } else { // if matching course exists, update it with the json data
-                    req.body.userId = req.currentUser.id;
-                    course.update(req.body)
-                    .then((course) => { 
-                        if (!course){
-                            const error = new Error('There was a problem posting the course'); // custom error message
-                            error.status = 400;
-                            next(error); // pass error along to global error handler
-                        } else {
-                            res.status(204).end();
-                        }
-                    }).catch((error)=>{
-                        // Use Sequelize ORM to catch any validation errors
-                        if (error.name === "SequelizeValidationError") {
-                            const errorsArray = error.errors.map((error) => {
-                                return error.message;                
-                            })
-                            const err = new Error(errorsArray);
-                            error.status = 400;
-                            next(err);
-                        } else {
-                            next(error); // catch any other errors and pass errors to global error handler
-                        }
-                    });
-                    return null
-                }
-            }
-        }).catch((error) => {  
-            // catch any other errors and pass errors to global error handler
-            next(error);
-        });
+// update sequelize model queries for the Courses endpoint GET routes to filter out the following properties
+const filter = {
+  include: [
+    {
+      model: User,
+      attributes: { exclude: ["password", "createdAt", "updatedAt"] }
     }
+  ],
+  attributes: { exclude: ["createdAt", "updatedAt"] }
+};
+//returns a list of courses(including the user that owns each course)
+router.get("/courses", async (req, res) => {
+  const allCourses = await Course.findAll(filter);
+  res.status(200).json(allCourses);
 });
 
-// Delete course route
-router.delete("/:id", authenticateUser, (req, res, next) => {
-    Course.findByPk(req.params.id)
-    .then((course) => {
-        if(!(course.userId == req.currentUser.id)) {
-            res.status(403).json({ message: 'Users may only delete courses they created themselves' });
-        } else {
-            if (!course) { 
-                const error = new Error('Cannot find the requested resource to update'); // custom error message
-                error.status = 400;
-                next(error); // catch any other errors and pass errors to global error handler
-            } else { // delete matched course
-                return course.destroy()
-                .then((course)=>{
-                    if (!course) { 
-                        const error = new Error('There was a problem deleting the course'); // custom error message
-                        error.status = 400;
-                        next(error);
-                    } else {
-                    res.status(204).end();
-                    }
-                }).catch((error) => {
-                    // catch any other errors and pass errors to global error handler
-                    next(error);
-                });
+//Returns a the course(including the user that owns the course) for the provided course ID
+router.get("/courses/:id", async (req, res, next) => {
+  let err = {};
+  const courses = await Course.findByPk(req.params.id, filter);
+  if (courses == null) {
+    err.message = "Course not found";
+    err.status = 404; // Status Not Found
+    next(err);
+  } else {
+    res.status(200).json(courses);
+  }
+});
+
+// Create a course, sets the Location header to the URI for the course, and returns no content
+// router.post('/courses', authUser, [
+//   check('title')
+//     .exists()
+//     .withMessage("Title field cannot be empty"),
+//   check('description')
+//   .exists()
+//   .withMessage("Description field cannot be empty"),
+// ], async (req, res) => {
+
+//   const errors = validationResult(req);
+
+//   if(!errors.isEmpty()) {
+//     // Return a 400 with error messages
+//     const err = new Error("Validation Error");
+//     err.status = 400;
+//     err.message = errors.array().map( error => error.msg );
+//     res.status(400).json({message: err.message});
+//     // next(err);
+//   } else {
+//     try {
+//       const newCourse = await Course.create(req.body);
+//       //Sets the response Location HTTP header to the specified path parameter.
+//       res.location(`/api/courses/${newCourse.id}`);
+//       res.status(201);  //Sets the HTTP status for the response -- 201=The request has been fulfilled, resulting in the creation of a new resource
+//       res.end();  //Ends the response process
+//     } catch(error) {
+//       console.log(error);
+//     }
+//   }
+// })
+// ;
+
+router.post('/courses', authUser, async ( req, res, next ) => {
+  const { title, description, estimatedTime, materialsNeeded } = req.body;
+  const userId = req.currentUser.id
+  
+  try{
+
+      await Course.create({
+          title,
+          description,
+          estimatedTime,
+          materialsNeeded,
+          userId
+      });
+
+      res.location(`${req.originalUrl}/${req.currentUser.id}`);
+      res.status(201);
+      res.end();
+} catch (err) {
+
+  if(err.name === 'SequelizeValidationError'){
+      err.message = err.errors.map(val => val.message);    
+      err.status = 400;
+  }
+
+  next(err);
+  }
+});
+
+
+
+
+// Updates a course and returns no content
+router.put("/courses/:id", authUser, async (req, res, next) => {
+  const { title, description, estimatedTime, materialsNeeded } = req.body;
+  const userId = req.currentUser.id;
+  const err = new Error();
+
+  try {
+    const course = await Course.findByPk(req.params.id, filter);
+    //if object is empty throw error
+    if (Object.keys(req.body).length === 0) {
+      err.status = 400; //Bad Request-The server cannot or will not process the request due to an apparent client error
+      err.message = "No empty objects";
+      throw err;
+    } else if (course === null) {
+      err.status = 404; //Not Found-The requested resource could not be found but may be available in the future. Subsequent requests by the client are permissible.
+      err.message = "I'm sorry, unable to update due to courses not found";
+      throw err;
+    } else {
+      const courseUserId = course.toJSON().User.id;
+
+      if (userId === courseUserId) {
+        await Course.update(
+          {
+            title,
+            description,
+            estimatedTime,
+            materialsNeeded,
+            userId
+          },
+          {
+            where: {
+              id: `${req.params.id}`,
+              userId: `${userId}`
             }
-        }
-    }).catch((error) => {  
-        // catch any other errors and pass errors to global error handler
-        next(error);
-    });
+          }
+        );
+
+        res.status(204).end();  //No content-The server successfully processed the request and is not returning any content
+      } else {
+        err.status = 403; //Forbidden-The request was valid, but the server is refusing action. The user might not have the necessary permissions for a resource
+        err.message = "Unable to update other users's courses";
+        throw err;
+      }
+    }
+  } catch (err) {
+    if (err.name === "SequelizeValidationError") {
+      err.message = err.errors.map(val => val.message);
+      err.status = 400; //Bad Request-The server cannot or will not process the request due to an apparent client error
+    }
+
+    next(err);
+  }
+});
+
+//Deletes a course and returns no content
+router.delete("/courses/:id", authUser, async (req, res, next) => {
+  try {
+    const userid = req.currentUser.id;
+    const course = await Course.findByPk(req.params.id, filter);
+    console.log(`Output => : course`, course);
+    const err = new Error();
+
+    if (course === null) {
+      err.status = 404;// NOT FOUND STATUS
+      err.message = "I'm sorry, unable to delete due to courses not found";
+      throw err;
+    } else {
+      const courseUserId = course.toJSON().User.id;
+
+      if (userid === courseUserId) {
+        await Course.destroy({
+          where: {
+            id: `${req.params.id}`
+          }
+        });
+
+        res.status(204).end();  // NO CONTENT STATUS
+      } else {
+        err.status = 403; // FORBIDDEN STATUS
+        err.message = "Unable to delete other users's courses";
+        throw err;
+      }
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;

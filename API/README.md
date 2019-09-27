@@ -1,5 +1,5 @@
 
-# Project-Nine-REST-API-s-with-Express
+# Full Stack JavaScript Techdegree v2 - REST API Project
 
 ## Overview of the Provided Project Files
 

@@ -1,165 +1,241 @@
-import React, { Component } from 'react';
-import config from "../config";
+import React, { Component } from "react";
+import axios from "axios";
+import { Consumer } from "../Context";
+import { Link, withRouter } from "react-router-dom";
 
-
-export default class UpdateCourse extends Component {
-
-  // inital state of the UpdateCourse Component
+class UpdateCourse extends Component {
   state = {
-    title: '',
-    description: '',
-    estimatedTime: '',
-    materialsNeeded: '',
-    userId: '',
-    user:{},
-    errors: [],
-      }
+    id: "",
+    title: "",
+    description: "",
+    estimatedTime: "",
+    materialsNeeded: "",
+    userId: "",
+    errors: ""
+  };
 
-  // // change func to handle form inputs
-  update = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-
-    this.setState(() => {
-      return {
-        [name]: value
-      };
-    });
+  // fetching courses using axios
+  componentDidMount() {
+    this.Courses();
   }
 
-  // GET request to the REST API for the single course when component mounted
-  async componentDidMount() {
-    // GET request
-    const res = await this.props.context.data.api(`/courses/${this.props.match.params.id}`, 'GET');
-    if (res.status === 200) {
-      return res.json().then(course => this.setState({
-        // setState course details of the fetched course
-        title: course.title,
-        description: course.description,
-        estimatedTime: course.estimatedTime,
-        materialsNeeded: course.materialsNeeded,
-        userId: course.userId,
-        user: course.user,
-      }));
-    }else if (res.status === 404) { // not found
-      window.location.href = '/notfound';
-    }else if (res.status === 500) { // server error
-      window.location.href = '/error';
-    }else {
-      throw new Error();
-    }
-  }
-
-  // checks if authenticated user is the course owner,
-  // if not redirect to '/forbidden'
-  componentDidUpdate() {
-    // context from props
-    const { context } = this.props;
-    // authenticated user from context
-    const authUser = context.authenticatedUser;
-    // course id from state
-    const courseUserId = this.state.userId;
-    // if the authenticated user is NOT the course owner
-    if(authUser.id !== courseUserId) {
-      window.location.href = '/forbidden';
-    }
-  }
-
-
-  // FUNC that handles a PUT request to the REST API to update the course
-  handleUpdate = async (e) => {
-    e.preventDefault();
-    // context from props
-    const { context } = this.props;
-    // authenticated user from context
-    const authUser = context.authenticatedUser;
-    // authenticated user credentials
-    const authUserId = authUser.id;
-    const emailAddress = authUser.emailAddress;
-    const password = authUser.password;
-    // data to be sent
-    const data = this.state;
-    // append authenticated user id to data
-    data.userId = authUserId;
-
-    // PUT request
-    const res = await context.data.api(`/courses/${this.props.match.params.id}`, 'PUT', data, true, { emailAddress, password } );
-    if (res.status === 204) { // updated
-    
-      this.setState({errors: []});
-      window.location.href = `/courses/${this.props.match.params.id}`;
-    }else if (res.status === 400) { // bad request
-      return res.json().then(data => {
-        this.setState({errors: data.errors});
+  Courses = () => {
+    axios
+      .get("http://localhost:5000/api/courses/" + this.props.match.params.id)
+      .then(res => {
+        const course = res.data;
+        if (course.userId === parseInt(localStorage.getItem("id"))) {
+          this.setState({
+            id: course.id,
+            title: course.title,
+            description: course.description,
+            estimatedTime: course.estimatedTime,
+            materialsNeeded: course.materialsNeeded,
+            userId: course.userId,
+            errors: ""
+          });
+        }
+      })
+      .catch(err => {
+        // uses try-catch method to catch errors
+        if (err.status === 400) {
+          // if error status is equal to bad request
+          this.props.history.push("/error"); // direct to error page
+        } else if (err.status === 500) {
+          // or if error status equals the internal server error
+          this.props.history.push("/error"); // direct to error page
+        }
       });
-    }
-    // else if (res.status === 401) { // access denied
-    //   return null; // show message or something
-    // }
-    else if (res.status === 500) {
-      window.location.href = '/error';
-    }else {
-      throw new Error();
-    }
-  }
-
+  };
 
 
   render() {
+    const {
+      title,
+      description,
+      estimatedTime,
+      materialsNeeded,
+      errors
+    } = this.state;
 
-    return(
-      <div className="bounds course--detail">
-        <h1>Update Course</h1>
-        <div>
-        {/* ternary operator -> validation errors ? show them : show nothing */}
-        {
-          this.state.errors.length ?
-          <div>
-            <h2 className="validation--errors--label">Validation errors</h2>
-            <div className="validation-errors">
-              <ul>
-                {this.state.errors.map((error, i) => <li key={i}>{error}</li>)}
-              </ul>
-            </div>
-          </div> : null
-        }
-          <form onSubmit={this.handleUpdate}>
-            <div className="grid-66">
-              <div className="course--header">
-                <h4 className="course--label">Course</h4>
-                <div><input id="title" name="title" type="text" onChange={this.update} value={this.state.title}  className="input-title course--title--input" placeholder="Course title..."/></div>
-                <p>By {this.state.user.firstName} {this.state.user.lastName} </p>
-              </div>
-              <div className="course--description">
+
+    return (
+      <Consumer>
+        {({ user, userId, emailAddress, password, }) => (
+          <div className="bounds course--detail">
+            <h1>Update Course</h1>
+            <div>
+              {errors ? (
                 <div>
-                  <textarea id="description" name="description" onChange={this.update} value={this.state.description} className="" placeholder="Course description..." ></textarea>
+                  <h2 className="validation--errors--label">
+                    Registration Error
+                  </h2>
+                  <div className="validation-errors">
+                    <ul>
+                      <li>{errors}</li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="grid-25 grid-right">
-              <div className="course--stats">
-                <ul className="course--stats--list">
-                  <li className="course--stats--list--item">
-                    <h4>Estimated Time</h4>
-                    <div><input id="estimatedTime" name="estimatedTime" type="text" onChange={this.update} value={this.state.estimatedTime} className="course--time--input"
-                        placeholder="Hours"  /></div>
-                  </li>
-                  <li className="course--stats--list--item">
-                    <h4>Materials Needed</h4>
+              ) : (
+                ""
+              )}
+
+              <form
+                onSubmit={e =>
+                  this.handleSubmit(
+                    e,
+                    user,
+                    userId,
+                    emailAddress,
+                    password,
+                    title,
+                    description,
+                    materialsNeeded,
+                    estimatedTime
+                  )
+                }
+              >
+                <div className="grid-66">
+                  <div className="course--header">
+                    <h4 className="course--label">Course</h4>
                     <div>
-                     <textarea id="materialsNeeded" name="materialsNeeded" onChange={this.update} value={this.state.materialsNeeded} className="" placeholder="List materials..." ></textarea>
+                      <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        className="input-title course--title--input"
+                        placeholder="Course title..."
+                        value={this.state.title}
+                        onChange={this.change}
+                      />
                     </div>
-                  </li>
-                </ul>
-              </div>
+                    <p>
+                      By {user.firstName} {user.lastName}
+                    </p>
+                  </div>
+                  <div className="course--description">
+                    <div>
+                      <textarea
+                        id="description"
+                        name="description"
+                        className=""
+                        placeholder="Course description..."
+                        value={this.state.description}
+                        onChange={this.change}
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid-25 grid-right">
+                  <div className="course--stats">
+                    <ul className="course--stats--list">
+                      <li className="course--stats--list--item">
+                        <h4>Estimated Time</h4>
+                        <div>
+                          <input
+                            id="estimatedTime"
+                            name="estimatedTime"
+                            type="text"
+                            className="course--time--input"
+                            placeholder="Hours"
+                            value={this.state.estimatedTime}
+                            onChange={this.change}
+                          />
+                        </div>
+                      </li>
+                      <li className="course--stats--list--item">
+                        <h4>Materials Needed</h4>
+                        <ul>
+                          <div>
+                            <textarea
+                              id="materialsNeeded"
+                              name="materialsNeeded"
+                              className=""
+                              placeholder="List materials..."
+                              value={this.state.materialsNeeded}
+                              onChange={this.change}
+                            ></textarea>
+                          </div>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="grid-100 pad-bottom">
+                  <button className="button" type="handleSubmit">
+                    Update Course
+                  </button>
+                  <button className="button button-secondary">
+                    <Link to={"/courses/" + this.props.match.params.id}>
+                      Cancel
+                    </Link>
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="grid-100 pad-bottom">
-              <button className="button" type="submit">Update Course</button>
-              <button className="button button-secondary" onClick={(e) => {e.preventDefault(); window.location.href=`/courses/${this.props.match.params.id}`;}}>Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
+          </div>
+        )}
+      </Consumer>
     );
   }
+
+  // this onchange event will handle the input. Onchange events occurs when the value of element has been changed
+  change = event => {
+    event.preventDefault();
+    const name = event.target.name;
+    const value = event.target.value;
+
+    //to change a value in the state object. When a value in the state object changes, the component will re-render, meaning that the output will change according to the new value
+    this.setState({
+      [name]: value
+    });
+  };
+
+  handleSubmit = (event) => {
+    event.preventDefault();
+
+    axios({
+      method: "put",
+      url: "http://localhost:5000/api/courses/" + this.props.match.params.id,
+      auth: {
+        username: localStorage.getItem("username"),
+        password: localStorage.getItem("password")
+      },
+
+      data: {
+        id: this.state.id,
+        title: this.state.title,
+        description: this.state.description,
+        estimatedTime: this.state.estimatedTime,
+        materialsNeeded: this.state.materialsNeeded,
+        userId: this.state.userId
+      }
+    })
+      .then(res => {
+        //route to show the course details once authorized
+        this.props.history.push("/courses/" + this.props.match.params.id);
+      })
+
+      .catch(err => {
+        // uses try-catch method to catch errors
+        if (err.response.status === 400) {
+          // if error status is equal to bad request
+          this.setState({
+            // direct to error page
+            errors: err.response.data.message
+          });
+        } else if (err.response.status === 401) {
+          // or if error status equals the unauthorized status
+          this.setState({
+            // direct to error page
+            errors: err.response.data.message
+          });
+        } else {
+          this.props.history.push("/error");
+        }
+      });
+  };
+  
 }
+export default withRouter(UpdateCourse);

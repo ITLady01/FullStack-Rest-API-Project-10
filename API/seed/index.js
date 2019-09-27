@@ -1,4 +1,3 @@
-
 'use strict';
 
 const promiseFinally = require('promise.prototype.finally');

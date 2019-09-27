@@ -1,2 +1,2 @@
-# FullStack-Rest-API-Project-10
-FullStack-API-Project-10
+# Project-10
+ Full Stack App with React and a REST API

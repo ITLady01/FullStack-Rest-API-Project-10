@@ -1,14 +1,17 @@
-import React from 'react';
-import { Redirect } from 'react-router-dom';
+import React, {Component} from 'react';
+import {Redirect} from 'react-router-dom';
 
 
-const UserSignOut = ({ context }) => {
-
-  context.actions.signOut();
-
-  return (
-    <Redirect to="/" />
-  );
+class UserSignOut extends Component {
+	render(){
+		return (<Redirect to="/courses" />);
+	}
 }
 
+
+
 export default UserSignOut;
+
+
+
+

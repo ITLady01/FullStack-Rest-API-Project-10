@@ -1,124 +1,157 @@
-/* Stateful class component */
 import React, { Component } from 'react';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
-import config from '../config';
+import { Consumer } from '../Context';
 
-class CreateCourse extends Component {
+
+
+export default class CreateCourse extends Component {
+
     state = {
-        title: '',
-        description: '',
-        estimatedTime: '',
-        materialsNeeded: '',
-        errors: [],
-    }
+        id: "",
+        title: "",
+        description: "",
+        estimatedTime: "",
+        materialsNeeded: "",
+        errors: ""
+    };
 
-    /* input handler */
-    update = (event) => {
-        const name = event.target.name;
-        const value = event.target.value;
-
-        this.setState(() => {
-            return {
-                [name]: value
-            };
-        });
-    }
-
-    /* create handler */
-    submit = async (e) => {
-        e.preventDefault();
-        const { context } = this.props;
-        const authUser = context.authenticatedUser;
-        const authUserId = authUser.id;
-        const emailAddress = authUser.emailAddress;
-        const password = authUser.password;
-        const data = this.state;
-        data.userId = authUserId;
-                /* API POST request */
-        const res = await context.data.api('/courses', 'POST', data, true, { emailAddress, password });
-        console.log(emailAddress);
-        console.log(password);
-        if (res.status === 200 || res.status === 201) {// if status 200 or 201, redirect user to main page 
-            window.location.href = '/';
-        } else if (res.status === 400) {     // status 400, display error message
-            this.setState({
-                errors: ['Please check that all field inputs are correct']
-            })
-            return;
-        } else if (res.status === 401 || res.status === 403) {     // if status 401 or 403 display forbidden message
-            window.location.href = '/forbidden';
-        } else {
-            window.location.href = '/error'; // display error page
-        }
-    }
 
     render() {
-        const {
-            title,
-            description,
-            estimatedTime,
-            materialsNeeded
-        } = this.state;
-
-        const { context } = this.props;
-        const authUser = context.authenticatedUser;
-
+        const { title, description, estimatedTime, materialsNeeded, errors } = this.state;
         return (
             <div className="bounds course--detail">
                 <h1>Create Course</h1>
                 <div>
-                    {
-                        this.state.errors.length ?
-                            <div>
-                                <h2 className="validation--errors--label">Validation errors</h2>
-                                <div className="validation-errors">
-                                    <ul>
-                                        {this.state.errors.map((error, i) => <li key={i}>{error}</li>)}
-                                    </ul>
-                                </div>
-                            </div> : null
-                    }
-                    <form onSubmit={this.submit}>
-                        <div className="grid-66">
-                            <div className="course--header">
-                                <h4 className="course--label">Course</h4>
+                    <Consumer>{({ user, emailAddress, password, authenticated }) => (
+                        <div>
+                            {errors ? (           // shows validation errors when applicable
                                 <div>
-                                    <input id="title" name="title" type="text" onChange={this.update} value={title} className="input-title course--title--input" placeholder="Course title..." />
+                                    <h2 className="validation--errors--label">Validation Error</h2>
+                                    <div className="validation-errors">
+                                        <ul>
+                                            <li>{errors}</li>
+                                        </ul>
+                                    </div>
                                 </div>
-                                <p>By {authUser.firstName} {authUser.lastName}</p>
-                            </div>
-                            <div className="course--description">
-                                <div>
-                                    <textarea id="description" name="description" onChange={this.update} value={description} className="" placeholder="Course description..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="grid-25 grid-right">
-                            <div className="course--stats">
-                                <ul className="course--stats--list">
-                                    <li className="course--stats--list--item">
-                                        <h4>Estimated Time</h4>
+                            ) : ''}
+                            <form onSubmit={e => this.handleSubmit(e, user, emailAddress, password, title, description, materialsNeeded, estimatedTime, authenticated)}>
+                                <div className="grid-66">
+                                    <div className="course--header">
+                                        <h4 className="course--label">Course</h4>
                                         <div>
-                                            <input id="estimatedTime" name="estimatedTime" type="text" onChange={this.update} value={estimatedTime} className="course--time--input"
-                                                placeholder="Hours" />
+                                            <input
+                                                id="title"
+                                                name="title"
+                                                type="text"
+                                                className="input-title course--title--input"
+                                                placeholder="Course title..."
+                                                onChange={this.change} />
                                         </div>
-                                    </li>
-                                    <li className="course--stats--list--item">
-                                        <h4>Materials Needed</h4>
-                                        <div><textarea id="materialsNeeded" name="materialsNeeded" onChange={this.update} value={materialsNeeded} className="" placeholder="List materials..."></textarea></div>
-                                    </li>
-                                </ul>
-                            </div>
+                                        <p>By {user.firstName} {user.lastName}</p>
+                                    </div>
+                                    <div className="course--description">
+                                        <div>
+                                            <textarea
+                                                id="description"
+                                                name="description"
+                                                className=""
+                                                placeholder="Course description..."
+                                                onChange={this.change}>
+                                            </textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid-25 grid-right">
+                                    <div className="course--stats">
+                                        <ul className="course--stats--list">
+                                            <li className="course--stats--list--item">
+                                                <h4>Estimated Time</h4>
+                                                <div>
+                                                    <input
+                                                        id="estimatedTime"
+                                                        name="estimatedTime"
+                                                        type="text"
+                                                        className="course--time--input"
+                                                        placeholder="Hours"
+                                                        onChange={this.change} />
+                                                </div>
+                                            </li>
+                                            <li className="course--stats--list--item">
+                                                <h4>Materials Needed</h4>
+                                                <div>
+                                                    <textarea
+                                                        id="materialsNeeded"
+                                                        name="materialsNeeded"
+                                                        className=""
+                                                        placeholder="List materials..."
+                                                        onChange={this.change}>
+                                                    </textarea>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div className="grid-100 pad-bottom">
+                                    <button className="button" type="handleSubmit">Create Course</button>
+                                    <Link className="button button-secondary" to={"/courses"}>Cancel</Link>
+                                </div>
+                            </form>
                         </div>
-                        <div className="grid-100 pad-bottom">
-                            <button className="button" type="submit">Create Course</button>
-                            <Link className="button button-secondary" to="/">Cancel</Link>
-                        </div>
-                    </form>
+                    )}</Consumer>
                 </div>
             </div>
         );
     }
+
+    change = (e) => {
+        e.preventDefault();
+        const input = e.target;
+        this.setState({
+            [input.name]: input.value
+        });
+    };
+
+
+    handleSubmit = (e, error) => {
+        e.preventDefault();
+        
+        axios("http://localhost:5000/api/courses", {       // I am using axios to fetch courses
+            method: "POST",
+            auth: {         // authorizing username and password
+                username: localStorage.getItem("username"),
+                password: localStorage.getItem("password")
+            },
+
+            data: {
+                title: this.state.title,
+                description: this.state.description,
+                estimatedTime: this.state.estimatedTime,
+                materialsNeeded: this.state.materialsNeeded,
+                userId: localStorage.getItem("id")
+            }
+        })
+
+            .then(res => {
+                this.props.history.push("/courses");
+                console.log("course successfully created");
+
+            }).catch(err => {       // using the try/catch method to catch the errors
+                if (err.response.status === 400) {      // if the response status is bad request
+                    this.setState({     // show error messages
+                        errors: err.response.data.message
+                    })
+                } else if (err.response.status === 401) { // or if response status is unauthorized 
+                    this.setState({     // show error messages
+                        errors: err.response.data.message
+                    })
+
+                } else {        // or route to the error page
+                    this.props.history.push("/error");
+                }
+            });
+    }
+
+    
 }
 
-export default CreateCourse;

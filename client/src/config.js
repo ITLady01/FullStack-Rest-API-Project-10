@@ -1,3 +1,4 @@
+// Storing base url to be used in fetch requests
 export default {
-    apiBaseUrl: 'http://localhost:5000/api',
+  apiBaseUrl: 'http://localhost:5000/api',
 };

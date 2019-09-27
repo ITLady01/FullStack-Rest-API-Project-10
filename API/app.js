@@ -1,76 +1,56 @@
-'use strict';
+"use strict"; // Help write better code
 
-// load modules
-const express = require('express');
-const morgan = require('morgan');
-const { models } = require('./models');
-const Sequelize = require('sequelize');
-var routeIndex = require('./routes/index');
-var routerUsers = require('./routes/users');
-var routerCourses = require('./routes/courses');
-var cors = require('cors');
-
-const options = {
-  dialect: 'sqlite',
-  storage: './fsjstd-restapi.db',
-  // This option configures Sequelize to always force the synchronization
-  // of our models by dropping any existing tables.
-  sync: { force: true },
-  define: {
-    // This option removes the `createdAt` and `updatedAt` columns from the tables
-    // that Sequelize generates from our models. These columns are often useful
-    // with production apps, so we'd typically leave them enabled, but for our
-    // purposes let's keep things as simple as possible.
-    timestamps: false,
-  },
-};
-
-// construct the database
-const db = new Sequelize(options);
-
-console.log('Testing the connection to the database...');
-
-// Test the connection to the database
-  db.authenticate()
-    .then(() => {
-      console.log('Connected to database.');
-      return db.sync();
-    })
-    .catch(err => console.error('The connection failed.'));
+// Loading modules
+const express = require("express"); // Bring in the express module
+const morgan = require("morgan");
+const bodyParser = require("body-parser"); // logic to parse the JSON in the incoming request
+const { sequelize } = require("./models");
+const cors = require('cors');
 
 // variable to enable global error logging
-const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
+const enableGlobalErrorLogging =
+  process.env.ENABLE_GLOBAL_ERROR_LOGGING === "true";
 
-// create the Express app
-const app = express();
+const app = express(); // Create the Express app - controls how the app behaves when restful requests are made to it
 
-//cors cross-origin request enabling middleware
+// Enables cors requests
 app.use(cors());
 
-//JSON parser
-app.use(express.json());
+(async () => {
+  try {
+    await sequelize.authenticate(); // Test the connection to the database
+    console.log("Connection to the database was successful");
+    await sequelize.sync(); // Sync the models
+    console.log("Models are synchronized with the database");
+  } catch (err) {
+    console.log("Connection to the database was unsuccessful" + " " + err);
+  }
+})();
 
-// setup morgan which gives us http request logging
-app.use(morgan('dev'));
+// setup morgan which gives us HTTP request logging
+app.use(morgan("dev"));
 
-//Setup your api routes here
-app.use('/', routeIndex);
-app.use('/api/users', routerUsers);
-app.use('/api/courses', routerCourses);
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
 
+// parse application/json
+app.use(bodyParser.json());
 
+// setup your api routes here
+app.use("/api", require("./routes/users"));
+app.use("/api", require("./routes/courses"));
 
 // setup a friendly greeting for the root route
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
-    message: 'Welcome to the REST API project!',
+    message: "Welcome to my REST API project! Thank you for visiting my page!"
   });
 });
 
 // send 404 if no other route matched
 app.use((req, res) => {
   res.status(404).json({
-    message: 'Route Not Found',
+    message: "Route Not Found"
   });
 });
 
@@ -82,13 +62,14 @@ app.use((err, req, res, next) => {
 
   res.status(err.status || 500).json({
     message: err.message,
-    errorStatus: err.status,
+    errors: {}
   });
 });
 
-// set our port
-app.set('port', process.env.PORT || 5000);
+// specify port to serve the app on
+app.set("port", process.env.PORT || 5000);
+
 // start listening on our port
-const server = app.listen(app.get('port'), () => {
+const server = app.listen(app.get("port"), () => {
   console.log(`Express server is listening on port ${server.address().port}`);
 });

@@ -1,159 +1,198 @@
-/* Stateful class component */
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import Form from './Form';
+import React, { Component } from "react";
+import axios from "axios";
+import { Link, withRouter } from "react-router-dom";
+
+
+import Context from "../Context";
 
 class UserSignUp extends Component {
-    state = {
-        firstName: '',
-        lastName: '',
-        emailAddress: '',
-        password: '',
-        confirmPassword: '',
-        errors: []
-    }
+  state = {
+    firstName: "",
+    lastName: "",
+    emailAddress: "",
+    password: "",
+    validatePassword: "",
+    errors: ""
+  };
 
-    /* handles state change */
-    update = (event) => {
-        const name = event.target.name;
-        const value = event.target.value;
 
-        this.setState(() => {
-            return {
-                [name]: value
-            };
+  render() {
+    const {
+      firstName,
+      lastName,
+      emailAddress,
+      password,
+      errors,
+      signIn
+    } = this.state;
+
+
+    return (
+      <div className="bounds">
+        <div className="grid-33 centered signin">
+          <h1>Sign Up</h1>
+          <div>
+            {errors ? (
+              <div>
+                <h2 className="validation--errors--label">Validation Error</h2>
+                <div className="validation-errors">
+                  <ul>
+                    <li>{errors}</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              ""
+            )}
+            <form
+              onSubmit={e =>
+                this.SignUp(
+                  e,
+                  signIn,
+                  firstName,
+                  lastName,
+                  emailAddress,
+                  password
+                )
+              }
+            >
+              <div>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  className=""
+                  placeholder="First Name"
+                  onChange={this.change}
+                />
+              </div>
+              <div>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  className=""
+                  placeholder="Last Name"
+                  onChange={this.change}
+                />
+              </div>
+              <div>
+                <input
+                  id="emailAddress"
+                  name="emailAddress"
+                  type="email"
+                  className=""
+                  placeholder="Email Address"
+                  onChange={this.change}
+                />
+              </div>
+              <div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  className=""
+                  placeholder="Password"
+                  onChange={this.change}
+                />
+              </div>
+              <div>
+                <input
+                  id="validatePassword"
+                  name="validatePassword"
+                  type="password"
+                  className=""
+                  placeholder="Confirm Password"
+                  onChange={this.change}
+                />
+              </div>
+              <div className="grid-100 pad-bottom">
+                <button className="button" type="handleSubmit">
+                  Sign Up
+                </button>
+                <Link className="button button-secondary" to="/">
+                  Cancel
+                </Link>
+              </div>
+            </form>
+          </div>
+          <p>&nbsp;</p>
+          <p>
+            Already have a user account? <Link to="/signIn"> Click here </Link>{" "}
+            to sign in!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // this onchange event will handle the input. Onchange events occurs when the value of element has been changed
+  change = event => {
+    event.preventDefault();
+    const name = event.target.name;
+    const value = event.target.value;
+
+    //to change a value in the state object. When a value in the state object changes, the component will re-render, meaning that the output will change according to the new value
+    this.setState({
+      [name]: value
+    });
+  };
+
+  SignUp = (event, err, error, signIn) => {
+    event.preventDefault();
+    const {
+      firstName,
+      lastName,
+      emailAddress,
+      password,
+      validatePassword
+    } = this.state;
+    if (password !== validatePassword) {
+      // if passwords aren't confirmed send error messages
+      this.setState({
+        errors: "Opps. Passwords do not match"
+      });
+    } else {
+      axios
+        .post("http://localhost:5000/api/users", {
+          firstName,
+          lastName,
+          emailAddress,
+          password
+        })
+        .then(res => {
+          if (res.status === 201) {
+            //if response is okay,
+            this.setState({
+              errors: ""
+            });
+            this.context.signIn(null, emailAddress, password);
+            this.props.history.push("/courses");
+          }
+        })
+
+        .catch(err => {
+          // catch errors
+          if (err.response.status === 400) {
+            // if the response status is bad request
+            this.setState({
+              // show error
+              errors: err.response.data.message
+            });
+          } else if (err.response.status === 401) {
+            // or if response status is unauthorized
+            this.setState({
+              //show error
+              errors: err.response.data.message
+            });
+          } else {
+            this.props.history.push("/error");
+            console.log(err.response.status);
+          }
         });
     }
-
-    /* submit function that creates a new user and sends their credentials to the Express server */
-    submit = () => {
-        const { context } = this.props;
-        const {
-            firstName,
-            lastName,
-            emailAddress,
-            password,
-            confirmPassword
-        } = this.state;
-
-        let user = {};
-        /* check that all form fields are filled out, if not, display error message */
-        if (firstName === '' || lastName === '' || emailAddress === '' || password === '' || confirmPassword === '') {
-            this.setState({
-                errors: ['One or more fields are missing information, please check that all fields are filled out correctly']
-            })
-            return;
-        }
-
-        if (password !== confirmPassword) {     // display error message if passwords don't match
-            this.setState({
-                errors: ['The entered passwords do not match']
-            })
-            return;
-
-        } else {        // otherwise set properties for user
-            user = {
-                firstName,
-                lastName,
-                emailAddress,
-                password
-            };
-        }
-
-        /* returns a promise: either an array of errors (sent from the API if the response is 400), or an empty array (if the response is 201) */
-        context.data.createUser(user)
-            .then(res => {
-                if (res.status === 500) {
-                    this.props.history.push('/error');    // redirects url to error route
-                } else {
-                    context.actions.signIn(emailAddress, password)
-                        .then(() => {
-                            this.props.history.push('/');
-                        });
-                }
-            })
-            .catch((err) => {        // handles a rejected promise returned by createUser()
-                console.log(err);
-                this.setState({
-                    errors: ['That email is already being used.']
-                })
-                // this.props.history.push('/error');    // redirects url to error route
-            });
-    }
-
-    /* cancel function */
-    cancel = () => {
-        this.props.history.push('/');    // redirects to main page of app
-    }
-
-    render() {
-        const {
-            firstName,
-            lastName,
-            emailAddress,
-            password,
-            confirmPassword,
-            errors
-        } = this.state;
-
-        /* returns input fields to be used in each form */
-        return (
-            <div className='bounds'>
-                <div className='grid-33 centered signin'>
-                    <h1>Sign Up</h1>
-                    <Form
-                        cancel={this.cancel}
-                        errors={errors}
-                        submit={this.submit}
-                        submitButtonText='Sign Up'
-                        elements={() => (
-                            <React.Fragment>
-                                <input
-                                    id='firstName'
-                                    name='firstName'
-                                    type='text'
-                                    className=''
-                                    value={firstName}
-                                    onChange={this.update}
-                                    placeholder='First Name' />
-                                <input
-                                    id='lastName'
-                                    name='lastName'
-                                    type='text'
-                                    className=''
-                                    value={lastName}
-                                    onChange={this.update}
-                                    placeholder='Last Name' />
-                                <input
-                                    id='emailAddress'
-                                    name='emailAddress'
-                                    type='text'
-                                    className=''
-                                    value={emailAddress}
-                                    onChange={this.update}
-                                    placeholder='Email Address' />
-                                <input id='password'
-                                    name='password'
-                                    type='password'
-                                    className=''
-                                    value={password}
-                                    onChange={this.update}
-                                    placeholder='Password' />
-                                <input id='confirmPassword'
-                                    name='confirmPassword'
-                                    type='password'
-                                    className=''
-                                    value={confirmPassword}
-                                    onChange={this.update}
-                                    placeholder='Confirm Password' />
-                            </React.Fragment>
-                        )} />
-                    <p> Already have a user account? <Link to='/signin'>Click here</Link> to sign in! </p>
-                </div>
-            </div>
-        );
-    }
+  };
 }
+UserSignUp.contextType = Context; //importing from context 
 
-
-export default UserSignUp;
+export default withRouter(UserSignUp);
