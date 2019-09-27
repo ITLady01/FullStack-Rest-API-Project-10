@@ -35,7 +35,7 @@ export default class CreateCourse extends Component {
                                     </div>
                                 </div>
                             ) : ''}
-                            <form onSubmit={e => this.handleSubmit(e, user, emailAddress, password, title, description, materialsNeeded, estimatedTime, authenticated)}>
+                            <form onSubmit={e => this.Submit(e, user, emailAddress, password, title, description, materialsNeeded, estimatedTime, authenticated)}>
                                 <div className="grid-66">
                                     <div className="course--header">
                                         <h4 className="course--label">Course</h4>
@@ -46,7 +46,7 @@ export default class CreateCourse extends Component {
                                                 type="text"
                                                 className="input-title course--title--input"
                                                 placeholder="Course title..."
-                                                onChange={this.change} />
+                                                onChange={this.update} />
                                         </div>
                                         <p>By {user.firstName} {user.lastName}</p>
                                     </div>
@@ -57,7 +57,7 @@ export default class CreateCourse extends Component {
                                                 name="description"
                                                 className=""
                                                 placeholder="Course description..."
-                                                onChange={this.change}>
+                                                onChange={this.update}>
                                             </textarea>
                                         </div>
                                     </div>
@@ -74,7 +74,7 @@ export default class CreateCourse extends Component {
                                                         type="text"
                                                         className="course--time--input"
                                                         placeholder="Hours"
-                                                        onChange={this.change} />
+                                                        onChange={this.update} />
                                                 </div>
                                             </li>
                                             <li className="course--stats--list--item">
@@ -85,7 +85,7 @@ export default class CreateCourse extends Component {
                                                         name="materialsNeeded"
                                                         className=""
                                                         placeholder="List materials..."
-                                                        onChange={this.change}>
+                                                        onChange={this.update}>
                                                     </textarea>
                                                 </div>
                                             </li>
@@ -104,7 +104,7 @@ export default class CreateCourse extends Component {
         );
     }
 
-    change = (e) => {
+    update = (e) => {
         e.preventDefault();
         const input = e.target;
         this.setState({
@@ -113,10 +113,10 @@ export default class CreateCourse extends Component {
     };
 
 
-    handleSubmit = (e, error) => {
+    Submit = (e, error) => {
         e.preventDefault();
         
-        axios("http://localhost:5000/api/courses", {       // I am using axios to fetch courses
+        axios("http://localhost:5000/api/courses", { // I am using axios to fetch courses
             method: "POST",
             auth: {         // authorizing username and password
                 username: localStorage.getItem("username"),

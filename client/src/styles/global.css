@@ -207,7 +207,7 @@ body {
 
 /* line 13, ../sass/global.sass */
 .header {
-  background: #b41778;
+  background: #9932a8;
   padding: 20px 0;
   margin-bottom: 30px;
 }
@@ -282,7 +282,7 @@ h1 {
 
 /* line 61, ../sass/global.sass */
 a {
-  color: #9b6887;
+  color: #7c689b;
   cursor: pointer;
   text-decoration: none;
   -webkit-transition: color 0.2s;
@@ -434,7 +434,7 @@ p {
 .course--header .course--title {
   font-size: 48px;
   margin-bottom: 15px;
-  color: #912971;
+  color: #332a40;
 }
 /* line 171, ../sass/global.sass */
 .course--header p {
@@ -678,7 +678,7 @@ input:focus {
 
 /* line 507, ../sass/global.sass */
 .button {
-  background: #9b688c;
+  background: #7c689b;
   color: #fff;
   font-family: "Work Sans", sans-serif;
   font-size: 18px;

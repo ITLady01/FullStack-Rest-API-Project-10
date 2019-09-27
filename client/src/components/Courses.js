@@ -3,14 +3,16 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 export default class Courses extends Component {
+   // STATE Courses Component
   state = {
     isLoading: true,
     courses: []
   };
 
-
+// FETCH courses from REST API when Courses Component mounted and setState
   componentDidMount() {
     axios
+    // GET request to the REST API URL
       .get(`http://localhost:5000/api/courses`)
       .then(res => {
         const courses = res.data;
@@ -35,6 +37,7 @@ export default class Courses extends Component {
       <div id="root">
         <div>
           <div className="bounds">
+            {/*mapping through courses, returns courses ID*/}
             {this.state.courses.map(course => (
               <div key={course.id} className="grid-33">
                 <Link
@@ -71,4 +74,4 @@ export default class Courses extends Component {
       </div>
     );
   }
-}
+}//end Courses

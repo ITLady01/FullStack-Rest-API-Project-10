@@ -12,10 +12,10 @@ class CourseDetail extends Component {
 
 
   componentDidMount() {
-    this.CoursesDetail();
+    this.CoursesInfo();
   }
 
-  CoursesDetail = () => {
+  CoursesInfo = () => {
     axios
       .get("http://localhost:5000/api/courses/" + this.props.match.params.id)
       .then(res => {
