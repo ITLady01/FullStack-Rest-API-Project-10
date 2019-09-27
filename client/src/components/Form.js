@@ -1,6 +1,6 @@
 import React from 'react';
 
-/* exports a function that renders any validation errors sent from the API via the <ErrorsDisplay> function component */
+/* exports a function that renders any validation errors sent from the API via the <ErrorsShown> function component */
 export default (props) => {
     const {
         cancel,
@@ -11,36 +11,36 @@ export default (props) => {
     } = props;
 
     /* renders submit button of a form and handles functionality */
-    function handleSubmit(event) {
+    function Submit(event) {
         event.preventDefault();
         submit();
     }
 
     /* renders cancel button of a form and handles functionality */
-    function handleCancel(event) {
+    function Cancel(event) {
         event.preventDefault();
         cancel();
     }
 
     return (
         <div>
-            <ErrorsDisplay errors={errors} />
-            <form onSubmit={handleSubmit}>
+            <ErrorsShown errors={errors} />
+            <form onSubmit={Submit}>
                 {elements()}
                 <div className='pad-bottom'>
                     <button className='button' type='submit'>{submitButtonText}</button>
-                    <button className='button button-secondary' onClick={handleCancel}>Cancel</button>
+                    <button className='button button-secondary' onClick={Cancel}>Cancel</button>
                 </div>
             </form>
         </div>
     );
 }
 
-function ErrorsDisplay({ errors }) {
-    let errorsDisplay = null;
+function ErrorsShown({ errors }) {
+    let errorsShown = null;
 
     if (errors.length) {
-        errorsDisplay = (
+        errorsShown = (
             <div>
                 <h2 className='validation--errors--label'>Validation errors</h2>
                 <div className='validation-errors'>
@@ -52,5 +52,5 @@ function ErrorsDisplay({ errors }) {
         );
     }
 
-    return errorsDisplay;
+    return errorsShown;
 }

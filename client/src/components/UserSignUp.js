@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Link, withRouter } from "react-router-dom";
+import { Link, Router } from "react-router-dom";
 
 
 import Context from "../Context";
@@ -63,7 +63,7 @@ class UserSignUp extends Component {
                   type="text"
                   className=""
                   placeholder="First Name"
-                  onChange={this.change}
+                  onChange={this.update}
                 />
               </div>
               <div>
@@ -73,7 +73,7 @@ class UserSignUp extends Component {
                   type="text"
                   className=""
                   placeholder="Last Name"
-                  onChange={this.change}
+                  onChange={this.update}
                 />
               </div>
               <div>
@@ -83,7 +83,7 @@ class UserSignUp extends Component {
                   type="email"
                   className=""
                   placeholder="Email Address"
-                  onChange={this.change}
+                  onChange={this.update}
                 />
               </div>
               <div>
@@ -93,7 +93,7 @@ class UserSignUp extends Component {
                   type="password"
                   className=""
                   placeholder="Password"
-                  onChange={this.change}
+                  onChange={this.update}
                 />
               </div>
               <div>
@@ -103,11 +103,11 @@ class UserSignUp extends Component {
                   type="password"
                   className=""
                   placeholder="Confirm Password"
-                  onChange={this.change}
+                  onChange={this.update}
                 />
               </div>
               <div className="grid-100 pad-bottom">
-                <button className="button" type="handleSubmit">
+                <button className="button" type="Submit">
                   Sign Up
                 </button>
                 <Link className="button button-secondary" to="/">
@@ -127,7 +127,7 @@ class UserSignUp extends Component {
   }
 
   // this onchange event will handle the input. Onchange events occurs when the value of element has been changed
-  change = event => {
+  update = event => {
     event.preventDefault();
     const name = event.target.name;
     const value = event.target.value;
@@ -195,4 +195,4 @@ class UserSignUp extends Component {
 }
 UserSignUp.contextType = Context; //importing from context 
 
-export default withRouter(UserSignUp);
+export default Router(UserSignUp);

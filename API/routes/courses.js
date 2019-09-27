@@ -33,39 +33,6 @@ router.get("/courses/:id", async (req, res, next) => {
   }
 });
 
-// Create a course, sets the Location header to the URI for the course, and returns no content
-// router.post('/courses', authUser, [
-//   check('title')
-//     .exists()
-//     .withMessage("Title field cannot be empty"),
-//   check('description')
-//   .exists()
-//   .withMessage("Description field cannot be empty"),
-// ], async (req, res) => {
-
-//   const errors = validationResult(req);
-
-//   if(!errors.isEmpty()) {
-//     // Return a 400 with error messages
-//     const err = new Error("Validation Error");
-//     err.status = 400;
-//     err.message = errors.array().map( error => error.msg );
-//     res.status(400).json({message: err.message});
-//     // next(err);
-//   } else {
-//     try {
-//       const newCourse = await Course.create(req.body);
-//       //Sets the response Location HTTP header to the specified path parameter.
-//       res.location(`/api/courses/${newCourse.id}`);
-//       res.status(201);  //Sets the HTTP status for the response -- 201=The request has been fulfilled, resulting in the creation of a new resource
-//       res.end();  //Ends the response process
-//     } catch(error) {
-//       console.log(error);
-//     }
-//   }
-// })
-// ;
-
 router.post('/courses', authUser, async ( req, res, next ) => {
   const { title, description, estimatedTime, materialsNeeded } = req.body;
   const userId = req.currentUser.id

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link, withRouter } from "react-router-dom";
+import { Link, Router } from "react-router-dom";
 import { Consumer } from "../Context";
 
 class UserSignIn extends Component {
@@ -35,7 +35,7 @@ class UserSignIn extends Component {
                 )}
                 <form
                   onSubmit={event =>
-                    this.handleSubmit(
+                    this.Submit(
                       event,
                       signIn,
                       this.state.emailAddress,
@@ -51,7 +51,7 @@ class UserSignIn extends Component {
                       className=""
                       placeholder="Email Address"
                       defaultValue=""
-                      onChange={this.change}
+                      onChange={this.update}
                     />
                   </div>
                   <div>
@@ -62,7 +62,7 @@ class UserSignIn extends Component {
                       className=""
                       placeholder="Password"
                       defaultValue=""
-                      onChange={this.change}
+                      onChange={this.update}
                     />
                   </div>
                   <div className="grid-100 pad-bottom">
@@ -88,7 +88,7 @@ class UserSignIn extends Component {
   }
 
   // this onchange event will handle the input. Onchange events occurs when the value of element has been changed
-  change = event => {
+  update = event => {
     event.preventDefault();
     const name = event.target.name;
     const value = event.target.value;
@@ -99,7 +99,7 @@ class UserSignIn extends Component {
     });
   };
 
-  handleSubmit = (event, signIn, emailAddress, password, err) => {
+  Submit = (event, signIn, emailAddress, password, err) => {
     if (event) {
       event.preventDefault();
 
@@ -108,4 +108,4 @@ class UserSignIn extends Component {
     }
   };
 }
-export default withRouter(UserSignIn);
+export default Router(UserSignIn);

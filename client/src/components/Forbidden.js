@@ -3,7 +3,7 @@ import React from 'react';
 const Forbidden = () => {
     return (<div className="bounds" >
         <h1> Forbidden </h1>
-        <p> You don't have authorization to do that </p>
+        <p> You are not authorized to view this page! </p>
         <button className="button button-primary btn-not-found"
             onClick={
                 (e) => {

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Consumer } from "../Context";
-import { Link, withRouter } from "react-router-dom";
+import { Link, Router } from "react-router-dom";
   // inital state of the UpdateCourse Component
 class UpdateCourse extends Component {
   state = {
@@ -191,6 +191,7 @@ class UpdateCourse extends Component {
       method: "put",
       url: "http://localhost:5000/api/courses/" + this.props.match.params.id,
       auth: {
+         //credit found this code https://stackoverflow.com/questions/11246947/can-localstorage-be-modified-by-a-client
         username: localStorage.getItem("username"),
         password: localStorage.getItem("password")
       },
@@ -230,4 +231,4 @@ class UpdateCourse extends Component {
   };
   
 }
-export default withRouter(UpdateCourse);
+export default Router(UpdateCourse);

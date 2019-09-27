@@ -93,7 +93,7 @@ export default class CreateCourse extends Component {
                                     </div>
                                 </div>
                                 <div className="grid-100 pad-bottom">
-                                    <button className="button" type="handleSubmit">Create Course</button>
+                                    <button className="button" type="Submit">Create Course</button>
                                     <Link className="button button-secondary" to={"/courses"}>Cancel</Link>
                                 </div>
                             </form>
@@ -118,7 +118,8 @@ export default class CreateCourse extends Component {
         
         axios("http://localhost:5000/api/courses", { // I am using axios to fetch courses
             method: "POST",
-            auth: {         // authorizing username and password
+            auth: { // authorizing username and password
+            //credit found this code https://stackoverflow.com/questions/11246947/can-localstorage-be-modified-by-a-client
                 username: localStorage.getItem("username"),
                 password: localStorage.getItem("password")
             },
