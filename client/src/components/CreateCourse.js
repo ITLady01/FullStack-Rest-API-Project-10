@@ -119,7 +119,7 @@ export default class CreateCourse extends Component {
         axios("http://localhost:5000/api/courses", { // I am using axios to fetch courses
             method: "POST",
             auth: { // authorizing username and password
-            //credit found this code https://stackoverflow.com/questions/11246947/can-localstorage-be-modified-by-a-client
+            //reference info found on https://stackoverflow.com/questions/11246947/can-localstorage-be-modified-by-a-client
                 username: localStorage.getItem("username"),
                 password: localStorage.getItem("password")
             },
