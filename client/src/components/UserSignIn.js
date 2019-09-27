@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link, Router } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
 import { Consumer } from "../Context";
 
 class UserSignIn extends Component {
@@ -108,4 +108,4 @@ class UserSignIn extends Component {
     }
   };
 }
-export default Router(UserSignIn);
+export default withRouter(UserSignIn);

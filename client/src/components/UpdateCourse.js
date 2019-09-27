@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Consumer } from "../Context";
-import { Link, Router } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
   // inital state of the UpdateCourse Component
 class UpdateCourse extends Component {
   state = {
@@ -231,4 +231,4 @@ class UpdateCourse extends Component {
   };
   
 }
-export default Router(UpdateCourse);
+export default withRouter(UpdateCourse);

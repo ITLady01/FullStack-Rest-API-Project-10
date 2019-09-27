@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Link, Router } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
 
 
 import Context from "../Context";
@@ -195,4 +195,4 @@ class UserSignUp extends Component {
 }
 UserSignUp.contextType = Context; //importing from context 
 
-export default Router(UserSignUp);
+export default withRouter(UserSignUp);
