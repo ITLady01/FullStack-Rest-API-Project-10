@@ -1,5 +1,13 @@
 {
-    "cSpell.words": [
-        "autoincrement"
+    "cSpell.ignoreWords": [
+        "db",
+        "fsjstd",
+        "index",
+        "joepassword",
+        "restapi",
+        "routes",
+        "sallypassword",
+        "sequelize",
+        "techdegree"
     ]
 }

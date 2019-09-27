@@ -37,9 +37,7 @@ module.exports = (req, res, next) => {
                         firstName: user.firstName,
                         lastName: user.lastName,
                         fullName: `${user.firstName} ${user.lastName}`,
-                        emailAddress: user.emailAddress,
-                        password: user.password
-                        
+                        emailAddress: user.emailAddress
                     }
                     next();
                     return null;

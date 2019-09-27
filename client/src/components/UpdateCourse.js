@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import axios from "axios";
 import { Consumer } from "../Context";
 import { Link, withRouter } from "react-router-dom";
-
+  // inital state of the UpdateCourse Component
 class UpdateCourse extends Component {
   state = {
     id: "",
@@ -13,8 +13,8 @@ class UpdateCourse extends Component {
     userId: "",
     errors: ""
   };
-
-  // fetching courses using axios
+  
+  // GET request to the REST API for the courses when component mounted
   componentDidMount() {
     this.Courses();
   }
@@ -24,7 +24,9 @@ class UpdateCourse extends Component {
       .get("http://localhost:5000/api/courses/" + this.props.match.params.id)
       .then(res => {
         const course = res.data;
+        //referenced this code from the internet
         if (course.userId === parseInt(localStorage.getItem("id"))) {
+          //These properties are set in state 
           this.setState({
             id: course.id,
             title: course.title,
@@ -37,18 +39,18 @@ class UpdateCourse extends Component {
         }
       })
       .catch(err => {
-        // uses try-catch method to catch errors
+        // The try-catch method is used to catch errors
         if (err.status === 400) {
-          // if error status is equal to bad request
+          // the error status is equal to bad response
           this.props.history.push("/error"); // direct to error page
         } else if (err.status === 500) {
-          // or if error status equals the internal server error
+          // or if error status equates to the internal server error
           this.props.history.push("/error"); // direct to error page
         }
       });
   };
 
-
+//The variables are rendering and are at state
   render() {
     const {
       title,
@@ -68,7 +70,7 @@ class UpdateCourse extends Component {
               {errors ? (
                 <div>
                   <h2 className="validation--errors--label">
-                    Registration Error
+                    Validation Errors
                   </h2>
                   <div className="validation-errors">
                     <ul>
@@ -82,18 +84,7 @@ class UpdateCourse extends Component {
 
               <form
                 onSubmit={e =>
-                  this.handleSubmit(
-                    e,
-                    user,
-                    userId,
-                    emailAddress,
-                    password,
-                    title,
-                    description,
-                    materialsNeeded,
-                    estimatedTime
-                  )
-                }
+                  this.Submit(e, user, userId, emailAddress, password, title, description, materialsNeeded, estimatedTime)}
               >
                 <div className="grid-66">
                   <div className="course--header">
@@ -106,7 +97,7 @@ class UpdateCourse extends Component {
                         className="input-title course--title--input"
                         placeholder="Course title..."
                         value={this.state.title}
-                        onChange={this.change}
+                        onChange={this.update}
                       />
                     </div>
                     <p>
@@ -121,7 +112,7 @@ class UpdateCourse extends Component {
                         className=""
                         placeholder="Course description..."
                         value={this.state.description}
-                        onChange={this.change}
+                        onChange={this.update}
                       ></textarea>
                     </div>
                   </div>
@@ -139,7 +130,7 @@ class UpdateCourse extends Component {
                             className="course--time--input"
                             placeholder="Hours"
                             value={this.state.estimatedTime}
-                            onChange={this.change}
+                            onChange={this.update}
                           />
                         </div>
                       </li>
@@ -153,7 +144,7 @@ class UpdateCourse extends Component {
                               className=""
                               placeholder="List materials..."
                               value={this.state.materialsNeeded}
-                              onChange={this.change}
+                              onChange={this.update}
                             ></textarea>
                           </div>
                         </ul>
@@ -180,8 +171,9 @@ class UpdateCourse extends Component {
     );
   }
 
-  // this onchange event will handle the input. Onchange events occurs when the value of element has been changed
-  change = event => {
+  
+  // FUNC that handles a PUT request to the REST API to update the course
+  update = event => {
     event.preventDefault();
     const name = event.target.name;
     const value = event.target.value;
@@ -192,7 +184,7 @@ class UpdateCourse extends Component {
     });
   };
 
-  handleSubmit = (event) => {
+  Submit = (event) => {
     event.preventDefault();
 
     axios({
@@ -213,7 +205,7 @@ class UpdateCourse extends Component {
       }
     })
       .then(res => {
-        //route to show the course details once authorized
+        //route to show the course details once given permission
         this.props.history.push("/courses/" + this.props.match.params.id);
       })
 

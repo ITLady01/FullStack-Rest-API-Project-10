@@ -9,7 +9,7 @@ const Header = () => {
         <div className="header">
           <div className="bounds">
             <h1 className="header--logo">
-              <NavLink to="/courses">Courses</NavLink>
+              <NavLink to="/courses">Computer Courses</NavLink>
             </h1>
 
             {authenticated ? (

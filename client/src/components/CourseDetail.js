@@ -115,7 +115,7 @@ class CourseDetail extends Component {
       .delete(
         "http://localhost:5000/api/courses/" + this.props.match.params.id,
         {
-          auth: {   // validating user and pass is auth
+          auth: {   // validating the user and password for authentication
             username: localStorage.getItem("username"),
             password: localStorage.getItem("password")
           }
